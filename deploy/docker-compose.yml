@@ -1,0 +1,47 @@
+# Run from /opt/voicebot/deploy on the server (deploy.sh does this).
+# deploy/.env (written at boot) supplies DOMAIN and ACME_EMAIL; the project's
+# own .env, copied by deploy.sh, supplies GEMINI_API_KEY, UI_PASSWORD, etc.
+services:
+  app:
+    build: ..
+    image: neuracx-voicebot:local
+    restart: unless-stopped
+    # tini as PID 1 passes `docker stop`'s SIGTERM on; the app then sends exit on
+    # live calls and stops within about a second, well inside the grace period.
+    init: true
+    stop_grace_period: 10s
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      # Caddy expects the app here, whatever PORT the local .env says.
+      PORT: "8080"
+      DB_PATH: /data/voicebot.db
+      # Caddy sets X-Forwarded-For to the real client address.
+      TRUST_PROXY: "1"
+    volumes:
+      - app-data:/data
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2.11.7-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  app-data:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MagickVoice X NeuraCX (Dev)</title>
+  <link rel="icon" type="image/png" href="magickvoice-logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" src="magickvoice-logo.png" alt="" width="28" height="32" />
+      <strong>MagickVoice × NeuraCX</strong>
+      <span class="dev-tag">Dev</span>
+    </div>
+    <span class="live-chip" id="livePill">…</span>
+    <div class="stream-url">
+      <span class="label">Stream URL</span>
+      <code id="streamUrl">…</code>
+      <button type="button" class="btn quiet" id="copyUrl" aria-label="Copy stream URL">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+    <span class="key-status" id="keyStatus">…</span>
+  </header>
+
+  <div class="shell">
+    <nav class="sidebar" aria-label="Main">
+      <a class="nav" href="#setup" data-view="setup">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+        Bot setup
+      </a>
+      <a class="nav" href="#calls" data-view="calls">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        <span class="grow">Calls</span>
+        <span class="nav-count" id="navCallCount"></span>
+      </a>
+      <a class="nav" href="#settings" data-view="settings">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+        Shared settings
+      </a>
+      <a class="nav" href="#hotel" data-view="hotel">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg>
+        Hotel data
+      </a>
+
+      <div class="side-label" id="useCasesLabel">Use cases</div>
+      <div class="usecase-list" id="editProfiles" role="group" aria-labelledby="useCasesLabel"></div>
+      <p class="side-note">Changes apply from the next call. Calls in progress keep their settings.</p>
+    </nav>
+
+    <main class="main">
+      <form id="configForm" autocomplete="off" novalidate>
+        <!-- Bot setup: one use case at a time, with the test call beside it -->
+        <section class="view" id="view-setup" data-view="setup" aria-labelledby="ucTitle">
+          <div class="setup-grid">
+            <div class="editor">
+              <div class="page-head">
+                <div class="grow">
+                  <div class="eyebrow">Use case</div>
+                  <h1 id="ucTitle">…</h1>
+                  <div class="muted small" id="ucMeta"></div>
+                </div>
+                <div class="head-actions">
+                  <span class="live-state" id="liveBadge"><span class="dot active"></span>Live for new calls</span>
+                  <span class="muted small" id="notLive">Not live</span>
+                  <button type="button" class="btn primary" id="makeLive">Make live for new calls</button>
+                  <button type="button" class="btn quiet" id="resetProfile">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                    Reset to defaults
+                  </button>
+                </div>
+              </div>
+              <p id="liveStatus" class="small status-line" role="status"></p>
+              <p id="profileNote" class="notice small" hidden></p>
+
+              <div class="tabbar" role="tablist" aria-label="Use case settings">
+                <button type="button" role="tab" class="ptab" id="ptab-conv" data-panel="conv" aria-controls="panel-conv">Conversation</button>
+                <button type="button" role="tab" class="ptab" id="ptab-kb" data-panel="kb" aria-controls="panel-kb">Knowledge base</button>
+                <button type="button" role="tab" class="ptab" id="ptab-voice" data-panel="voice" aria-controls="panel-voice">Voice &amp; handoff</button>
+              </div>
+
+              <div class="panel" id="panel-conv" role="tabpanel" aria-labelledby="ptab-conv">
+                <div class="card">
+                  <label class="field">
+                    <span class="field-head"><span class="lt">System prompt</span><span class="hint">How the bot behaves on every call. The knowledge base is added after it.</span><span class="count" id="promptCount"></span></span>
+                    <textarea name="p.systemPrompt" rows="16" required></textarea>
+                  </label>
+                  <div class="chips" id="placeholderChips">
+                    <span class="muted small">Insert</span>
+                  </div>
+                </div>
+                <div class="card">
+                  <label class="field">
+                    <span class="field-head"><span class="lt">Opening line</span><span class="hint">What the bot is told to say when the call connects (if “Bot speaks first” is on).</span></span>
+                    <textarea name="p.greetingInstruction" rows="4"></textarea>
+                  </label>
+                </div>
+              </div>
+
+              <div class="panel" id="panel-kb" role="tabpanel" aria-labelledby="ptab-kb" hidden>
+                <div class="card">
+                  <label class="field">
+                    <span class="field-head"><span class="lt">Knowledge base</span><span class="hint">The only facts the bot may give callers.</span></span>
+                    <textarea name="p.knowledgeBase" rows="22"></textarea>
+                  </label>
+                  <p id="kbHint" class="muted small"></p>
+                </div>
+              </div>
+
+              <div class="panel" id="panel-voice" role="tabpanel" aria-labelledby="ptab-voice" hidden>
+                <div class="card fields-grid">
+                  <label class="field">
+                    <span class="lt">Voice</span>
+                    <select name="p.voice"></select>
+                    <span class="hint">Gemini Live voice for this use case.</span>
+                  </label>
+                  <label class="field">
+                    <span class="lt">Transfer number</span>
+                    <input name="p.transferNumber" placeholder="+971501234567" />
+                    <span class="hint">Leave empty to turn transfers off. When set, the bot can hand the caller over (<code>transfer_call</code>).</span>
+                  </label>
+                  <label class="field span-all">
+                    <span class="lt">Support contact</span>
+                    <textarea name="p.supportContact" rows="3" class="plain" required></textarea>
+                    <span class="hint">Where the bot sends callers with questions it can't answer.</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <aside class="rail" aria-label="Test call">
+              <section class="card">
+                <div class="card-head">
+                  <h2>Test call</h2>
+                  <span class="sim-status" id="simStatus">Idle</span>
+                </div>
+                <p class="muted small">Your mic is the caller, over the same WebSocket protocol NeuraCX uses. Uses the live use case, <strong id="simLiveName"></strong>. Wear headphones.</p>
+                <div class="sim-fields" id="simFields">
+                  <label class="field">Caller number<input id="simCli" value="+971500000001" /></label>
+                  <label class="field">Dialled number<input id="simDni" value="+97180000000" /></label>
+                </div>
+                <button type="button" class="btn primary big" id="simStart">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>
+                  Start test call
+                </button>
+                <div class="sim-live" id="simLive" hidden>
+                  <div class="meter-row">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
+                    <div class="meter" title="Mic level"><div id="simLevel"></div></div>
+                    <span class="mono" id="simTimer">0:00</span>
+                  </div>
+                  <div class="two">
+                    <button type="button" class="btn" id="keypadToggle" aria-expanded="false" aria-controls="keypad">
+                      <svg class="icon fill" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="5" r="1.6"/><circle cx="12" cy="5" r="1.6"/><circle cx="19" cy="5" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/><circle cx="5" cy="19" r="1.6"/><circle cx="12" cy="19" r="1.6"/><circle cx="19" cy="19" r="1.6"/></svg>
+                      Keypad
+                    </button>
+                    <button type="button" class="btn danger" id="simStop" disabled>End call</button>
+                  </div>
+                  <div class="keypad" id="keypad" hidden></div>
+                </div>
+              </section>
+
+              <section class="card">
+                <div class="card-head">
+                  <h2>Transcript</h2>
+                  <a href="#calls" id="railOpen" hidden>Open in Calls →</a>
+                </div>
+                <div class="muted small" id="railMeta">No calls yet.</div>
+                <div class="transcript rail-transcript" id="railTranscript"></div>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <!-- Shared settings -->
+        <section class="view" id="view-settings" data-view="settings" aria-labelledby="settingsTitle" hidden>
+          <div class="page-head">
+            <div class="grow">
+              <h1 id="settingsTitle">Shared settings</h1>
+              <div class="muted small">Apply to every use case. Changes apply from the next call.</div>
+            </div>
+            <button type="button" class="btn quiet" id="resetConfig">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+              Reset everything to defaults
+            </button>
+          </div>
+
+          <div class="settings-grid">
+            <fieldset class="card">
+              <legend>Gemini</legend>
+              <p class="muted small card-sub">The model behind every call.</p>
+              <label class="field"><span class="lt">Model</span>
+                <input name="model" class="mono" required />
+              </label>
+              <div class="field">
+                <span class="lt-static">API key</span>
+                <div class="key-box" id="keySource"></div>
+                <label class="field nested"><span class="lt">Use a different key</span>
+                  <input name="geminiApiKey" type="password" placeholder="Paste a key, or leave empty to keep the current one" />
+                </label>
+                <label class="toggle small-toggle">
+                  <span class="toggle-text"><span class="lt">Remove the key saved here</span><span class="hint">Falls back to GEMINI_API_KEY in .env.</span></span>
+                  <input type="checkbox" role="switch" name="clearGeminiApiKey" />
+                </label>
+              </div>
+              <div class="two">
+                <label class="field"><span class="lt">Temperature</span>
+                  <input name="temperature" type="number" min="0" max="2" step="0.1" placeholder="Model default" />
+                </label>
+                <label class="field"><span class="lt">Timezone</span>
+                  <input name="timezone" />
+                </label>
+              </div>
+              <p class="muted small">Timezone sets the time the bot sees in <code>{{now}}</code>.</p>
+            </fieldset>
+
+            <fieldset class="card">
+              <legend>Turn taking</legend>
+              <p class="muted small card-sub">When the bot decides the caller started or stopped talking.</p>
+              <label class="field"><span class="lt">Start of speech sensitivity</span>
+                <select name="vad.startSensitivity">
+                  <option value="START_SENSITIVITY_LOW">Low: fewer false starts</option>
+                  <option value="START_SENSITIVITY_HIGH">High: reacts faster</option>
+                </select>
+              </label>
+              <label class="field"><span class="lt">End of speech sensitivity</span>
+                <select name="vad.endSensitivity">
+                  <option value="END_SENSITIVITY_LOW">Low: waits longer</option>
+                  <option value="END_SENSITIVITY_HIGH">High: replies sooner</option>
+                </select>
+              </label>
+              <div class="two">
+                <label class="field"><span class="lt">Silence before reply</span>
+                  <span class="unit-wrap"><input name="vad.silenceDurationMs" type="number" min="0" step="50" /><span class="unit">ms</span></span>
+                </label>
+                <label class="field"><span class="lt">Prefix padding</span>
+                  <span class="unit-wrap"><input name="vad.prefixPaddingMs" type="number" min="0" step="10" /><span class="unit">ms</span></span>
+                </label>
+                <label class="field"><span class="lt">Check in after caller silence</span>
+                  <span class="unit-wrap"><input name="silenceTimeoutSec" type="number" min="0" max="60" /><span class="unit">sec</span></span>
+                </label>
+                <label class="field"><span class="lt">Check-ins before hanging up</span>
+                  <input name="silenceReprompts" type="number" min="0" max="5" />
+                </label>
+              </div>
+              <p class="muted small">Set the check-in to 0 to turn it off.</p>
+            </fieldset>
+
+            <fieldset class="card">
+              <legend>Call control</legend>
+              <p class="muted small card-sub">What the bot is allowed to do on the line.</p>
+              <label class="toggle">
+                <span class="toggle-text"><span class="lt">Bot speaks first</span><span class="hint">Says the opening line as soon as the call connects.</span></span>
+                <input type="checkbox" role="switch" name="botSpeaksFirst" />
+              </label>
+              <label class="toggle">
+                <span class="toggle-text"><span class="lt">Bot can hang up</span><span class="hint">Gives the bot the <code>end_call</code> tool, which sends <code>exit</code>.</span></span>
+                <input type="checkbox" role="switch" name="enableEndCall" />
+              </label>
+              <label class="toggle">
+                <span class="toggle-text"><span class="lt">Bot hears keypad presses</span><span class="hint">Passes DTMF digits the caller presses to the bot.</span></span>
+                <input type="checkbox" role="switch" name="forwardDtmf" />
+              </label>
+              <label class="field"><span class="lt">Outgoing audio chunk size</span>
+                <span class="unit-wrap"><input name="chunkSize" type="number" min="1600" step="160" /><span class="unit">bytes</span></span>
+              </label>
+            </fieldset>
+          </div>
+        </section>
+
+        <div class="savebar" id="saveBar">
+          <span class="save-dot" aria-hidden="true"></span>
+          <div class="grow">
+            <span id="saveStatus" role="status"></span>
+            <span id="customised" class="muted small"></span>
+            <ul id="formErrors" class="errors"></ul>
+          </div>
+          <button type="button" class="btn quiet" id="discardChanges" hidden>Discard</button>
+          <button type="submit" class="btn primary">Save changes</button>
+        </div>
+      </form>
+
+      <!-- Calls -->
+      <section class="view" id="view-calls" data-view="calls" aria-labelledby="callsTitle" hidden>
+        <div class="page-head">
+          <div class="grow">
+            <h1 id="callsTitle">Calls</h1>
+            <div class="muted small" id="callCount"></div>
+          </div>
+          <div class="segmented" role="group" aria-label="Filter calls" id="callFilter">
+            <button type="button" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" data-filter="live" aria-pressed="false">Live</button>
+            <button type="button" data-filter="ended" aria-pressed="false">Finished</button>
+          </div>
+          <label class="search">
+            <span class="sr-only">Search calls</span>
+            <input type="search" id="callSearch" placeholder="Search by number or call ID" />
+          </label>
+        </div>
+
+        <div class="calls-grid">
+          <div class="calls-col">
+            <ul id="callList" class="call-list"></ul>
+            <p id="noCalls" class="empty-box">Live calls show up here the moment they connect. Point your NeuraCX number at the stream URL, or start a test call from Bot setup.</p>
+            <p id="noMatches" class="empty-box" hidden>No calls match.</p>
+          </div>
+
+          <section class="card call-detail">
+            <p id="detailEmpty" class="muted">Pick a call to see its transcript and event log.</p>
+            <div id="callDetail" hidden>
+              <div class="detail-head">
+                <div class="grow">
+                  <h2 id="detailTitle" class="mono"></h2>
+                  <div id="detailStatus" class="muted small"></div>
+                </div>
+                <button type="button" class="btn danger" id="hangupBtn">Hang up</button>
+              </div>
+              <dl id="detailMeta" class="meta-grid"></dl>
+              <div class="tabbar" role="tablist" aria-label="Call details">
+                <button type="button" role="tab" class="tab active" data-tab="transcript" aria-selected="true">Transcript</button>
+                <button type="button" role="tab" class="tab" data-tab="log" aria-selected="false">Event log</button>
+              </div>
+              <div id="transcript" class="transcript"></div>
+              <ol id="eventLog" class="event-log" hidden></ol>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- Hotel data (Taj Dubai demo) -->
+      <section class="view" id="view-hotel" data-view="hotel" aria-labelledby="hotelTitle" hidden>
+        <div class="page-head">
+          <div class="grow">
+            <h1 id="hotelTitle">Hotel data</h1>
+            <div class="muted small">Used by the Taj Dubai reservations use case.</div>
+          </div>
+        </div>
+
+        <section class="card" aria-labelledby="resTitle">
+          <div class="card-head wrap">
+            <div class="grow">
+              <h2 id="resTitle">Reservations</h2>
+              <div class="muted small" id="resCount"></div>
+            </div>
+            <label class="inline"><span class="muted small">Show</span>
+              <select id="resFilter">
+                <option value="upcoming">Upcoming bookings</option>
+                <option value="all">All, including cancelled and past</option>
+              </select>
+            </label>
+            <button type="button" class="btn" id="resRefresh">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+              Refresh
+            </button>
+          </div>
+          <div class="table-wrap" id="resWrap" tabindex="0" role="region" aria-label="Reservations" hidden>
+            <table class="data">
+              <thead>
+                <tr>
+                  <th scope="col">Confirmation</th>
+                  <th scope="col">Guest</th>
+                  <th scope="col">Dates · nights</th>
+                  <th scope="col">Room · guests</th>
+                  <th scope="col" class="num">Total AED</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody id="resBody"></tbody>
+            </table>
+          </div>
+          <p id="resEmpty" class="empty-box" hidden></p>
+          <ul id="resErrors" class="errors"></ul>
+        </section>
+
+        <section class="card" aria-labelledby="roomsTitle">
+          <div class="card-head wrap">
+            <div class="grow">
+              <h2 id="roomsTitle">Rooms &amp; rates <span class="demo-tag">Demo data</span></h2>
+              <div class="muted small">The hotel bot quotes and books only from this table.</div>
+            </div>
+          </div>
+          <p class="notice small">
+            These rooms and rates, and the hotel info in <code>knowledge/taj-dubai-demo.txt</code>, are made up for the demo.
+            Replace them with the hotel's real data before going live.
+          </p>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Rooms and rates">
+            <table class="data rooms">
+              <thead>
+                <tr>
+                  <th scope="col">Code</th>
+                  <th scope="col">Name</th>
+                  <th scope="col" class="num">Max guests</th>
+                  <th scope="col" class="num">Nightly rate AED</th>
+                  <th scope="col" class="num">Inventory</th>
+                  <th scope="col">Description</th>
+                  <th scope="col"><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="roomsBody"></tbody>
+            </table>
+          </div>
+          <ul id="roomsErrors" class="errors"></ul>
+          <div class="toolbar">
+            <button type="button" class="btn" id="addRoom">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Add room
+            </button>
+            <span class="grow"></span>
+            <span id="roomsStatus" class="muted small" role="status"></span>
+            <button type="button" class="btn quiet" id="resetRooms">Reset demo rooms</button>
+            <button type="button" class="btn primary" id="saveRooms">Save rooms</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

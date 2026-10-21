@@ -1,0 +1,12 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	# WebSocket upgrades (/stream) are proxied as-is. flush_interval -1 keeps
+	# the UI's server-sent events from being buffered. Caddy replaces any
+	# X-Forwarded-For sent by the client, so the app can trust it (TRUST_PROXY).
+	reverse_proxy app:8080 {
+		flush_interval -1
+	}
+}

@@ -1,0 +1,39 @@
+DEMO DATA for testing — replace with the hotel's real information. Everything below is made up for the demo.
+
+ROOMS
+The hotel has four room types: the Deluxe Room (up to 2 guests), the Premier Room (up to 3 guests), the Luxury Suite (up to 4 guests) and the Presidential Suite (up to 4 guests).
+Rates and availability depend on the dates and come from the booking system. Always check availability before quoting a price.
+All rates are per room per night, in UAE dirhams (AED), and do not include taxes and fees, which are added at the hotel.
+
+CHECK-IN AND CHECK-OUT
+Check-in is from 3 pm. Check-out is by 12 noon.
+Early check-in and late check-out can be requested and depend on availability on the day. They may carry an extra charge.
+
+BREAKFAST
+Breakfast is served daily from 6:30 am to 10:30 am. It is not included in the room rate unless the booking says so, and can be added at the hotel.
+
+PARKING
+Guest parking and valet parking are available at the hotel.
+
+POOL, SPA AND GYM
+The hotel has an outdoor pool, a spa and a fitness centre for guests. The pool and fitness centre are open daily from 6 am to 10 pm. Spa treatments are booked directly with the spa during the stay.
+
+AIRPORT TRANSFERS
+Airport transfers can be arranged on request, at an extra charge. Guests can mention this as a special request when booking.
+
+CHILDREN AND EXTRA BEDS
+Children are welcome. Children count towards the maximum number of guests for a room.
+A baby cot can be provided free of charge on request. Extra beds are available in some room types on request and at an extra charge.
+
+PETS
+Pets are not allowed, except assistance animals.
+
+SMOKING
+All rooms are non-smoking. Smoking is only allowed in the designated outdoor areas.
+
+CANCELLATION
+Bookings can be cancelled free of charge until 48 hours before the arrival date. Cancellations after that, and no-shows, may be charged one night's rate.
+To change a booking, the existing booking is cancelled and a new one is made, subject to availability.
+
+PAYMENT
+No payment is taken over the phone. Payment is made at the hotel at check-in or check-out, by card or cash.

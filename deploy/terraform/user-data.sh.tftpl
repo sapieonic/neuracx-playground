@@ -1,0 +1,23 @@
+#!/bin/bash
+# Boot script: installs Docker with the compose and buildx plugins and prepares
+# /opt/voicebot. deploy/deploy.sh copies the code there and starts it.
+set -euo pipefail
+
+dnf install -y docker rsync
+systemctl enable --now docker
+usermod -aG docker ec2-user
+
+mkdir -p /usr/libexec/docker/cli-plugins
+curl -fsSL -o /usr/libexec/docker/cli-plugins/docker-compose \
+  "https://github.com/docker/compose/releases/download/v5.5.1/docker-compose-linux-${compose_arch}"
+curl -fsSL -o /usr/libexec/docker/cli-plugins/docker-buildx \
+  "https://github.com/docker/buildx/releases/download/v0.37.2/buildx-v0.37.2.linux-${buildx_arch}"
+chmod +x /usr/libexec/docker/cli-plugins/docker-*
+
+# Values compose fills into the Caddy service. deploy.sh never overwrites this file.
+mkdir -p /opt/voicebot/deploy
+cat > /opt/voicebot/deploy/.env <<ENV
+DOMAIN=${domain}
+ACME_EMAIL=${acme_email}
+ENV
+chown -R ec2-user:ec2-user /opt/voicebot
